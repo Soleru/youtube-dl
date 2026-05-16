@@ -1,0 +1,18 @@
+{
+  "name": "youtube-dl",
+  "version": "1.0.0",
+  "description": "Projet de téléchargement de vidéo et playlist youtube",
+  "main": "src/index.mjs",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Soleru",
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "^16.4.1",
+    "fluent-ffmpeg": "^2.1.2",
+    "fs": "^0.0.2",
+    "sanitize-filename": "^1.6.3",
+    "youtubei.js": "^17.0.1"
+  }
+}
