@@ -2,6 +2,9 @@ import { ClientType, Innertube, Platform } from "youtubei.js";
 import ffmpeg from "fluent-ffmpeg";
 import sanitize from "sanitize-filename";
 import { pipeline, Readable } from 'stream';
+import { getDefaultLogger } from 'logger';
+
+const logger = getDefaultLogger(true);
 
 Platform.shim.eval = async (data, env) => {
     const properties = [];
@@ -46,32 +49,31 @@ const getInfo = async videoID => {
             if (!title) return null;
             return sanitize(title);
         })
-        .catch(console.error);
+        .catch(logger.error);
 };
 
 const downloadVideo = async (url) => {
-    let yt = await Innertube.create({
-        client_type: ClientType.ANDROID
-    });
-    
-    let videoID = getVideoID(url);
-    let info = await yt.getBasicInfo(videoID);
-    let title = sanitize(info.basic_info.title);
-    // let title = await getInfo(videoID);
+    return new Promise(async (resolve, reject) => {
+        let yt = await Innertube.create({
+            client_type: ClientType.ANDROID
+        });
+        
+        let videoID = getVideoID(url);
+        let info = await yt.getBasicInfo(videoID).catch(reject);
+        let title = sanitize(info.basic_info.title);
+        // let title = await getInfo(videoID);
 
-    if (!title) return;
+        if (!title) return;
 
-    let re = /(.+?)\s*-\s*(.+)/;
+        let re = /(.+?)\s*-\s*(.+)/;
 
-    const format = await yt.getStreamingData(videoID, {
-        type: 'video+audio',
-        format: 'any',
-        quality: 'best'
-    });
+        const format = await yt.getStreamingData(videoID, {
+            type: 'video+audio',
+            format: 'any',
+            quality: 'best'
+        });
 
     // console.log(format.url);
-
-    return new Promise((resolve, reject) => {
         // let stream = ytdl(`https://www.youtube.com/watch?v=${videoID}`, {quality: "highestaudio"});
         fetch(format.url).then(res => Readable.fromWeb(res.body))
         /*yt.download(videoID, {
@@ -96,18 +98,18 @@ const downloadVideo = async (url) => {
                 );
             }
             command.on("end", () => {
-                console.log(`Téléchargement de la vidéo : ${videoID} : ${title}`);
+                logger.info(`Téléchargement de la vidéo : ${videoID} : ${title}`);
                 resolve();
             });
             command.on("error", err => {
-                console.error(`Erreur de la vidéo : ${videoID} : ${title}`);
-                console.error(err.message);
+                logger.error(`Erreur de la vidéo : ${videoID} : ${title}`);
+                logger.error(err.message);
                 reject(err.message);
             });
             command.run();
         }).catch(reason => {
-            console.error(`Erreur lors de la récupération : ${videoID} : ${title}`);
-            console.error(reason);
+            logger.error(`Erreur lors de la récupération : ${videoID} : ${title}`);
+            logger.error(reason);
             reject(reason);
         });
     });

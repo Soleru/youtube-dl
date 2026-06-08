@@ -12,6 +12,7 @@
     "dotenv": "^16.4.1",
     "fluent-ffmpeg": "^2.1.2",
     "fs": "^0.0.2",
+    "logger": "file:../logger",
     "sanitize-filename": "^1.6.3",
     "youtubei.js": "^17.0.1"
   }

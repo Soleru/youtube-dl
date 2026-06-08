@@ -1,4 +1,7 @@
 import { downloadVideo } from './video.mjs';
+import { getDefaultLogger } from 'logger';
+
+const logger = getDefaultLogger(true);
 
 const getPlaylistID = url => {
     let urlObj = new URL(url);
@@ -20,23 +23,27 @@ const downloadPlaylist = async (url, pageToken = "") => {
 
     let json = await fetch(`https://youtube.googleapis.com/youtube/v3/playlistItems?part=contentDetails&playlistId=${playlistID}&pageToken=${pageToken}&key=${process.env.API_KEY}`)
         .then(res => res.json())
-        .catch(console.error);
+        .catch(reason => {
+            logger.error(reason);
+        });
 
     let promises = [];
     json.items.forEach(item => {
         if (++index > skip) {
-            console.log(index);
+            logger.debug(`${index}: ${item.contentDetails.videoId}`);
             promises.push(downloadVideo(item.contentDetails.videoId));
         }
     });
 
-    Promise.all(promises)
+    Promise.allSettled(promises)
         .then(() => {
             if (json.nextPageToken) {
                 downloadPlaylist(url, json.nextPageToken);
             }
         })
-        .catch(console.error);
+        .catch(reason => {
+            logger.error(reason);
+        });
 }
 
 export {
